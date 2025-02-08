@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from gpt4all import GPT4All
 import ctypes
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 import speech_recognition as sr
-import pyttsx3
+from gtts import gTTS
 from pydub import AudioSegment
 import io
 
@@ -17,6 +17,10 @@ conversation_history = []  # Store conversation history
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('static/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -37,9 +41,6 @@ def load_model():
         return None
 
 model = load_model()
-
-# Text-to-Speech Engine
-engine = pyttsx3.init()
 
 def generate_response(user_message):
     conversation_history.append(f"User: {user_message}")
@@ -71,12 +72,11 @@ def ask():
 @app.route('/speak', methods=['POST'])
 def speak():
     text = request.json.get("text", "")
+    tts = gTTS(text)
     audio = io.BytesIO()
-    engine.save_to_file(text, 'output.mp3')
-    engine.runAndWait()
-    with open('output.mp3', 'rb') as f:
-        audio_data = f.read()
-    return io.BytesIO(audio_data), 200, {'Content-Type': 'audio/mpeg'}
+    tts.write_to_fp(audio)
+    audio.seek(0)
+    return send_file(audio, mimetype='audio/mpeg')
 
 @app.route('/speech-to-text', methods=['POST'])
 def speech_to_text():
