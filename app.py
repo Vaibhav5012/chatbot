@@ -33,7 +33,7 @@ sys.excepthook = handle_exception
 
 def load_model():
     try:
-        model = GPT4All(r"C:/Users/bvaib/Desktop/local/Llama-3.2-3B-Instruct-Q4_0.gguf")
+        model = GPT4All("Llama-3.2-3B-Instruct-Q4_0.gguf")
         print("Model loaded successfully!")
         return model
     except Exception as e:
